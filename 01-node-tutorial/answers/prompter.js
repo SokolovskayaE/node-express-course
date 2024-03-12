@@ -65,6 +65,11 @@ const server = http.createServer((req, res) => {
   }
 });
 
+// Add event listener for the "request" event
+server.on("request", (req) => {
+  console.log("event received:", req.method, req.url);
+});
+
 server.listen(3000, () => {
   console.log('Server is running on http://localhost:3000/');
 });
