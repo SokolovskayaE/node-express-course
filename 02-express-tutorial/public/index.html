@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WEST ELM</title>
+</head>
+<body style="background-color: #b8e1dd">
+    <h1 style="color:#062925">FURNITURE</h1>
+    <p style="color:#044a42; font-weight: bold;">Living room:</p>
+
+    <ul>
+        <li>Sofa</li>
+        <li>Sectional</li>
+        <li>TV & Media Consoles</li>
+    </ul>
+
+    <!-- Button to fetch products -->
+    <button id="fetchProductsButton">Search</button>
+
+    <!-- Container to display products -->
+    <div id="productsContainer"></div>
+
+    <script>
+        // Function to fetch products and update HTML content
+        async function fetchProducts() {
+            const fetchProductsButton = document.getElementById('fetchProductsButton');
+            const productsContainer = document.getElementById('productsContainer');
+            
+            try {
+                const response = await fetch('/api/v1/products');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch products');
+                }
+                const data = await response.json();
+
+                // Build HTML string
+                let productsHTML = '<h3>Available products:</h3>';
+                data.forEach(product => {
+                    productsHTML += `<p>Product ID: ${product.id}. Name: ${product.name}. Price: ${product.price}</p>`;
+                });
+
+                // Update products container
+                productsContainer.innerHTML = productsHTML;
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                // Display error message to the user
+                productsContainer.innerHTML = '<p>Error fetching products. Please try again later.</p>';
+            }
+        }
+
+        // Add event listener to the button
+        const fetchProductsButton = document.getElementById('fetchProductsButton');
+        fetchProductsButton.addEventListener('click', fetchProducts);
+    </script>
+</body>
+</html>
