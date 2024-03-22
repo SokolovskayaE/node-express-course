@@ -1,14 +1,14 @@
-const express = require ('express');
-const app = express ();
+const express = require('express');
+const app = express();
 const { products } = require('./data');
 
 // Setup static
-app.use(express.static ('./public' ));
+app.use(express.static('./public'));
 
 // API that return JSON
 app.get('/api/v1/test', (req, res) => {
-    res.json({message: 'It worked!'});
-})
+    res.json({ message: 'It worked!' });
+});
 
 // API that returns products data
 app.get('/api/v1/products', (req, res) => {
@@ -20,47 +20,48 @@ app.get('/api/v1/products/:productID', (req, res) => {
     const idToFind = parseInt(req.params.productID);
     const singleProduct = products.find(
         (product) => product.id === idToFind
-        );
+    );
     if (!singleProduct) {
-        return res.status(404).json({ message: 'That product was not found.' })
+        return res.status(404).json({ message: 'That product was not found.' });
     }
     return res.json(singleProduct);
 });
 
 // Query
 app.get('/api/v1/query', (req, res) => {
-    const { search, limit, priceLimit } = req.query;
-    let sortedProducts = [...products]
+    const { search, limit = 0, priceLimit = 0 } = req.query;
+    const maxLimit = parseInt(limit, 10);
 
-    // Filter products
-    if (search) {
-        sortedProducts = sortedProducts.filter ((product) => {
-            return product.name.startsWith(search)
-        })
-    }
-    // Limit the number of results
-    if (limit) {
-        sortedProducts = sortedProducts.slice(0, Number(limit))
-    }
-    // Filter products by maximum price if provided
-    if (priceLimit) {
-        sortedProducts = sortedProducts.filter ((product) => {
-            return product.price <= Number(priceLimit); 
-        });
-    }
-    // No products matched 
-    if (sortedProducts.length <1 ) {
-       return res.status(200).send('No products matched the search')
-    }
-    res.status(200).json(sortedProducts)
-})
+    // Use Array.reduce to build a list of filtered products
+    const filteredProducts = products.reduce((acc, product) => {
+        // If the product price is greater than priceLimit OR
+        // If there's a search and the product name doesn't include the search term OR
+        // If there’s a limit and the accumulator (acc === list of filtered products) hit the limit
+        // Then return the accumulator (acc === list of filtered products)
+        if (
+            product.price > parseFloat(priceLimit) || 
+            (search && !product.name.includes(search)) ||
+            (maxLimit && acc.length === maxLimit)
+        ) {
+            return acc;
+        }
+       
+        // Add product to accumulator list
+        acc.push(product);
+
+        // Return the accumulator to check the next product
+        return acc;
+    }, []);
+
+    res.status(200).json(filteredProducts);
+});
 
 // Not found handler
 app.all('*', (req, res) => {
-    res.status(404).send('<h1>Resourse not found</h1>')
-})
+    res.status(404).send('<h1>Resource not found</h1>');
+});
 
 // Start the server
-app.listen (3000, () =>{
-    console.log('Server is lisening on port 3000')
-})
+app.listen(3000, () => {
+    console.log('Server is listening on port 3000');
+});
