@@ -1,9 +1,30 @@
 const express = require('express');
 const app = express();
-const { products } = require('./data');
+const { products, people } = require('./data');
+
+//Middleware function "logger"
+const logger = (req, res, next) => {
+    const method = req.method
+    const url = req.url
+    const time = new Date() 
+    console.log(method, url, time)
+    next()
+}
+// Middleware to parse URL-encoded and JSON bodies
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
+
+// Call "logger" middleware
+app.use(logger);
 
 // Setup static
-app.use(express.static('./public'));
+app.use(express.static('./methods-public'));
+
+// Require the people router
+const peopleRouter = require('./routes/people');
+
+// Mount the people router
+app.use('/api/v1/people', peopleRouter);
 
 // API that return JSON
 app.get('/api/v1/test', (req, res) => {
@@ -32,7 +53,7 @@ app.get('/api/v1/query', (req, res) => {
     const { search, limit = 0, priceLimit = 0 } = req.query;
     const maxLimit = parseInt(limit, 10);
 
-    // Use Array.reduce to build a list of filtered products
+// Use Array.reduce to build a list of filtered products
     const filteredProducts = products.reduce((acc, product) => {
         // If the product price is greater than priceLimit OR
         // If there's a search and the product name doesn't include the search term OR
